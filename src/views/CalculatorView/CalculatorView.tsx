@@ -5,8 +5,10 @@ import styles from "./CalculatorView.module.scss";
 import {
     requestCalc,
     requestInverse,
+    requestPercent,
 } from "../../controllers/CalculatorController/CalculatorController";
 import axios from "axios";
+import { act } from "react-dom/test-utils";
 
 export default () => {
     const [total, setTotal] = useState<string>("0");
@@ -39,27 +41,18 @@ export default () => {
             name == "÷" ||
             name == "="
         ) {
-            let res = await requestCalc(total, next, operation);
+            let prevOp = operation;
+            setOperation(name);
+            let res = await requestCalc(total, next, prevOp);
             if (res) {
                 setLoading(false);
                 setTotal(res.data);
-                setOperation(name);
                 setNext(null);
+            } else {
+                setLoading(false);
+                setError(true);
+                clear();
             }
-            // requestCalc(total, next, operation)
-            //     .then((res) => {
-            //         setLoading(false);
-            //         setTotal(res.data);
-
-            //         setOperation(name);
-            //         setNext(null);
-            //     })
-            //     .catch((err) => {
-            //         setLoading(false);
-            //         setError(true);
-
-            //         clear();
-            //     });
             return;
         }
         if (name == ".") {
@@ -73,42 +66,53 @@ export default () => {
         if (name == "+/-") {
             if (next == null) {
                 /*calc request (total = -total) */
-                setLoading(true);
-                requestInverse(Number(total))
-                    .then((res) => {
-                        setLoading(false);
-                        setTotal(res.data);
-                    })
-                    .catch((err) => {
-                        setLoading(false);
-                        setError(true);
-
-                        clear();
-                    });
+                let res = await requestInverse(Number(total));
+                if (res) {
+                    setLoading(false);
+                    setTotal(res.data);
+                } else {
+                    setLoading(false);
+                    setError(true);
+                    clear();
+                }
             } else if (next != "0") {
                 /*calc request (next = -next) */
                 setLoading(true);
-                requestInverse(Number(next))
-                    .then((res) => {
-                        setLoading(false);
-                        setNext(res.data);
-                    })
-                    .catch((err) => {
-                        setLoading(false);
-                        setError(true);
-
-                        clear();
-                    });
+                let res = await requestInverse(Number(next));
+                if (res) {
+                    setLoading(false);
+                    setNext(res.data);
+                } else {
+                    setLoading(false);
+                    setError(true);
+                    clear();
+                }
             }
             return;
         }
         if (name == "%") {
             if (next == null) {
                 /*calc request (total = 0.01 * total) */
-                setTotal((total) => String(0.01 * Number(total)));
+                let res = await requestPercent(Number(total));
+                if (res) {
+                    setLoading(false);
+                    setTotal(res.data);
+                } else {
+                    setLoading(false);
+                    setError(true);
+                    clear();
+                }
             } else if (next != "0") {
                 /*calc request (next = 0.01 * next) */
-                setNext((next) => String(0.01 * Number(next)));
+                let res = await requestPercent(Number(next));
+                if (res) {
+                    setLoading(false);
+                    setNext(res.data);
+                } else {
+                    setLoading(false);
+                    setError(true);
+                    clear();
+                }
             }
         }
     };

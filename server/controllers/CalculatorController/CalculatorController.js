@@ -3,6 +3,7 @@ const Big = require('big.js');
 //calculate from [total operation next]
 const calcMain = (req, res) => {
 	const { total, next, operation } = req.query;
+	console.log(total, next, operation);
 	
 	let totalNum = isNaN(total) ? null : Big(total);
 	let nextNum = isNaN(next) ? null : Big(next);
